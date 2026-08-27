@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecteur de Flux API</title>
+    <title>Lecteur de Flux API (Proxy CORS)</title>
     <style>
-        /* Design sombre, minimaliste avec effet Glassmorphism */
         body {
             background-color: #0f0f13;
             color: #e0e0e0;
@@ -32,7 +31,7 @@
         }
 
         h1 {
-            color: #00e5ff; /* Accent néon cyan */
+            color: #00e5ff;
             text-align: center;
             font-weight: 400;
             margin-top: 0;
@@ -74,10 +73,10 @@
             overflow-x: auto;
             max-height: 500px;
             overflow-y: auto;
-            color: #a3ff00; /* Texte vert néon typique des terminaux/JSON */
+            color: #a3ff00;
             font-size: 14px;
             line-height: 1.5;
-            white-space: pre-wrap; /* Permet le retour à la ligne automatique si besoin */
+            white-space: pre-wrap;
             word-wrap: break-word;
         }
     </style>
@@ -92,7 +91,7 @@
         </div>
 
         <div class="output-wrapper">
-            <pre id="api-content">Cliquez sur le bouton pour lire le contenu de l'API...</pre>
+            <pre id="api-content">Cliquez sur le bouton pour lire le contenu de l'API avec le proxy...</pre>
         </div>
     </div>
 
@@ -100,40 +99,33 @@
         async function fetchData() {
             const displayArea = document.getElementById('api-content');
             
-            // L'URL de l'API que l'on souhaite interroger
-            const apiUrl = 'https://api.apioztv.online'; 
+            // Utilisation du proxy CORS AllOrigins pour contourner le blocage du navigateur
+            const targetUrl = 'https://api.apioztv.online';
+            const apiUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl); 
             
-            displayArea.textContent = "Connexion en cours...";
+            displayArea.textContent = "Connexion en cours via le proxy...";
 
             try {
-                // Lancement de la requête HTTP
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
                     throw new Error(`Erreur réseau : ${response.status} ${response.statusText}`);
                 }
 
-                // On vérifie le type de contenu retourné par l'API
                 const contentType = response.headers.get("content-type");
                 
                 let data;
-                // Si l'API renvoie du JSON structuré
                 if (contentType && contentType.includes("application/json")) {
                     const jsonData = await response.json();
-                    // On formate le JSON avec une indentation de 4 espaces pour faciliter la lecture et la copie
                     data = JSON.stringify(jsonData, null, 4);
                 } else {
-                    // Si l'API renvoie du texte brut (ex: liste m3u8)
                     data = await response.text();
                 }
 
-                // Affichage du résultat dans la balise <pre>
                 displayArea.textContent = data;
 
             } catch (error) {
-                // Gestion des erreurs
-                displayArea.textContent = "Impossible de lire l'API.\n\nDétail de l'erreur : " + error.message + 
-                "\n\nNote : Si l'API refuse la connexion, il s'agit probablement d'une sécurité CORS (Cross-Origin Resource Sharing) activée par le serveur de l'API qui empêche un navigateur web de lire les données directement.";
+                displayArea.textContent = "Erreur persistante.\n\nDétail : " + error.message;
             }
         }
     </script>
