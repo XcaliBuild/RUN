@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecteur de Flux API</title>
+    <style>
+        /* Design sombre, minimaliste avec effet Glassmorphism */
+        body {
+            background-color: #0f0f13;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: #00e5ff; /* Accent néon cyan */
+            text-align: center;
+            font-weight: 400;
+            margin-top: 0;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: transparent;
+            color: #00e5ff;
+            border: 1px solid #00e5ff;
+            padding: 10px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #00e5ff;
+            color: #0f0f13;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+        }
+
+        .output-wrapper {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            border-left: 3px solid #00e5ff;
+        }
+
+        pre {
+            margin: 0;
+            padding: 15px;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            color: #a3ff00; /* Texte vert néon typique des terminaux/JSON */
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap; /* Permet le retour à la ligne automatique si besoin */
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        <h1>Extraction de l'API</h1>
+        
+        <div class="controls">
+            <button onclick="fetchData()">Charger la liste des chaînes</button>
+        </div>
+
+        <div class="output-wrapper">
+            <pre id="api-content">Cliquez sur le bouton pour lire le contenu de l'API...</pre>
+        </div>
+    </div>
+
+    <script>
+        async function fetchData() {
+            const displayArea = document.getElementById('api-content');
+            
+            // L'URL de l'API que l'on souhaite interroger
+            const apiUrl = 'https://api.apioztv.online'; 
+            
+            displayArea.textContent = "Connexion en cours...";
+
+            try {
+                // Lancement de la requête HTTP
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur réseau : ${response.status} ${response.statusText}`);
+                }
+
+                // On vérifie le type de contenu retourné par l'API
+                const contentType = response.headers.get("content-type");
+                
+                let data;
+                // Si l'API renvoie du JSON structuré
+                if (contentType && contentType.includes("application/json")) {
+                    const jsonData = await response.json();
+                    // On formate le JSON avec une indentation de 4 espaces pour faciliter la lecture et la copie
+                    data = JSON.stringify(jsonData, null, 4);
+                } else {
+                    // Si l'API renvoie du texte brut (ex: liste m3u8)
+                    data = await response.text();
+                }
+
+                // Affichage du résultat dans la balise <pre>
+                displayArea.textContent = data;
+
+            } catch (error) {
+                // Gestion des erreurs
+                displayArea.textContent = "Impossible de lire l'API.\n\nDétail de l'erreur : " + error.message + 
+                "\n\nNote : Si l'API refuse la connexion, il s'agit probablement d'une sécurité CORS (Cross-Origin Resource Sharing) activée par le serveur de l'API qui empêche un navigateur web de lire les données directement.";
+            }
+        }
+    </script>
+
+</body>
+</html>
