@@ -3,127 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecteur de Flux HLS</title>
-    <!-- Importation de la bibliothèque Hls.js -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <title>Base Essentielle | MOVIX Backend Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg: #07080c; --primary: #00f2ff; --secondary: #ff3d71;
+            --glass: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #fff; --muted: #9ea3ac;
+        }
         body {
-            background-color: #0f0f13;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text);
+            margin: 0; padding: 20px;
         }
-
-        .glass-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 30px;
-            width: 100%;
-            max-width: 800px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            text-align: center;
-        }
-
-        h1 {
-            color: #00e5ff;
-            font-weight: 400;
-            margin-top: 0;
-            letter-spacing: 1px;
-        }
-
-        .video-wrapper {
-            position: relative;
-            padding-bottom: 56.25%; /* Ratio 16:9 */
-            height: 0;
-            overflow: hidden;
-            border-radius: 8px;
-            border: 1px solid #00e5ff;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
-            background-color: #000;
-            margin-bottom: 20px;
-        }
-
-        video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .status {
-            color: #a3ff00;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; }
+        h1 { margin: 0; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        .panel { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px; padding: 25px; backdrop-filter: blur(12px); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--muted); font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); border-radius: 8px; color: white; font-family: 'Outfit'; }
+        input:focus { outline: none; border-color: var(--primary); }
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { background: var(--text); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 10px; }
+        button.btn-primary { background: linear-gradient(90deg, var(--primary), var(--secondary)); color: white; }
+        button:hover { opacity: 0.8; transform: translateY(-2px); }
+        .item-list { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .item-card { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .item-card img { width: 40px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 15px; }
+        .item-info { flex-grow: 1; }
+        .item-meta { font-size: 0.8rem; color: var(--primary); }
+        .delete-btn { background: #ff3d71; color: white; width: 35px; padding: 8px; border-radius: 5px; }
     </style>
 </head>
 <body>
-
-    <div class="glass-container">
-        <h1>Lecteur Live TV</h1>
+    <div class="container">
+        <div class="header">
+            <h1>MOVIX | Base Essentielle CMS</h1>
+            <button class="btn-primary" style="width: auto;" onclick="exportJSON()"><i class="fas fa-download"></i> Exporter data.json</button>
+        </div>
         
-        <div class="status" id="status-message">Initialisation du lecteur...</div>
+        <div class="grid">
+            <!-- Formulaire d'ajout -->
+            <div class="panel">
+                <h3>Ajouter un contenu</h3>
+                <form id="addForm" onsubmit="addItem(event)">
+                    <div class="form-group">
+                        <label>Section (ex: Banner, Nouveautés, Films d'action)</label>
+                        <input type="text" id="sectionName" required placeholder="Banner">
+                    </div>
+                    <div class="form-group">
+                        <label>Titre</label>
+                        <input type="text" id="title" required>
+                    </div>
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="type" onchange="toggleSeriesFields()">
+                                <option value="movie">Film</option>
+                                <option value="series">Série</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>TMDB ID (Optionnel)</label>
+                            <input type="text" id="tmdbId">
+                        </div>
+                    </div>
+                    <div class="row-2" id="seriesFields" style="display: none;">
+                        <div class="form-group">
+                            <label>Saison</label>
+                            <input type="number" id="season" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Épisode</label>
+                            <input type="number" id="episode" value="1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>URL de l'image (Poster)</label>
+                        <input type="url" id="posterUrl" required>
+                    </div>
+                    <div class="form-group">
+                        <label>URL du lecteur (Lien MP4, M3U8 ou Iframe Embed)</label>
+                        <input type="text" id="streamUrl" required placeholder="https://...">
+                    </div>
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label>Badge (ex: 4K, VF, HD)</label>
+                            <input type="text" id="badge">
+                        </div>
+                        <div class="form-group">
+                            <label>Note (ex: 8.5)</label>
+                            <input type="text" id="rating">
+                        </div>
+                    </div>
+                    <button type="submit"><i class="fas fa-plus"></i> Ajouter à la base</button>
+                </form>
+            </div>
 
-        <div class="video-wrapper">
-            <!-- La balise vidéo HTML5 standard -->
-            <video id="video-player" controls autoplay></video>
+            <!-- Aperçu de la base de données -->
+            <div class="panel">
+                <h3>Aperçu de la base de données</h3>
+                <div id="previewArea"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        const video = document.getElementById('video-player');
-        const statusMessage = document.getElementById('status-message');
-        
-        // Ton lien direct .m3u8
-        const streamUrl = 'https://lb2.oztvlb.site/blcco/live/843_.m3u8';
+        let database = { sections: [] };
 
-        // Vérification de la compatibilité du navigateur avec Hls.js
-        if (Hls.isSupported()) {
-            const hls = new Hls({
-                debug: false // Mettre sur true pour voir les logs dans la console en cas de problème
-            });
+        function toggleSeriesFields() {
+            const type = document.getElementById('type').value;
+            document.getElementById('seriesFields').style.display = type === 'series' ? 'grid' : 'none';
+        }
+
+        function addItem(e) {
+            e.preventDefault();
+            const sectionName = document.getElementById('sectionName').value.trim();
+            const type = document.getElementById('type').value;
             
-            statusMessage.textContent = "Chargement du flux en cours...";
+            const newItem = {
+                id: Date.now().toString(),
+                title: document.getElementById('title').value,
+                type: type,
+                tmdb_id: document.getElementById('tmdbId').value,
+                poster_url: document.getElementById('posterUrl').value,
+                stream_url: document.getElementById('streamUrl').value,
+                badge: document.getElementById('badge').value,
+                rating: document.getElementById('rating').value,
+                season: type === 'series' ? document.getElementById('season').value : null,
+                episode: type === 'series' ? document.getElementById('episode').value : null,
+            };
+
+            let section = database.sections.find(s => s.section === sectionName);
+            if (!section) {
+                section = { section: sectionName, items: [] };
+                database.sections.push(section);
+            }
+            section.items.push(newItem);
             
-            hls.loadSource(streamUrl);
-            hls.attachMedia(video);
+            document.getElementById('addForm').reset();
+            document.getElementById('sectionName').value = sectionName; // Garder la section active
+            renderPreview();
+        }
+
+        function deleteItem(sectionIndex, itemIndex) {
+            database.sections[sectionIndex].items.splice(itemIndex, 1);
+            if (database.sections[sectionIndex].items.length === 0) {
+                database.sections.splice(sectionIndex, 1);
+            }
+            renderPreview();
+        }
+
+        function renderPreview() {
+            const area = document.getElementById('previewArea');
+            area.innerHTML = '';
             
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                statusMessage.textContent = "Flux prêt. En direct.";
-                video.play().catch(error => {
-                    statusMessage.textContent = "Lecture automatique bloquée. Cliquez sur Play.";
+            database.sections.forEach((sec, sIndex) => {
+                const secDiv = document.createElement('div');
+                secDiv.innerHTML = `<h4 style="color:var(--primary); margin-top:20px;">${sec.section} (${sec.items.length})</h4>`;
+                const list = document.createElement('div');
+                list.className = 'item-list';
+                
+                sec.items.forEach((item, iIndex) => {
+                    const epInfo = item.type === 'series' ? ` | S${item.season} E${item.episode}` : '';
+                    list.innerHTML += `
+                        <div class="item-card">
+                            <div style="display:flex; align-items:center;">
+                                <img src="${item.poster_url}" alt="poster">
+                                <div class="item-info">
+                                    <strong>${item.title}</strong>
+                                    <div class="item-meta">${item.type.toUpperCase()} ${epInfo} | ${item.badge || 'N/A'}</div>
+                                </div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteItem(${sIndex}, ${iIndex})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
                 });
+                secDiv.appendChild(list);
+                area.appendChild(secDiv);
             });
+        }
 
-            hls.on(Hls.Events.ERROR, function(event, data) {
-                if (data.fatal) {
-                    statusMessage.textContent = "Erreur fatale lors du chargement du flux.";
-                    statusMessage.style.color = "#ff4444"; // Rouge pour les erreurs
-                }
-            });
-        } 
-        // Alternative pour Safari (qui lit le HLS nativement)
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = streamUrl;
-            video.addEventListener('loadedmetadata', function() {
-                statusMessage.textContent = "Flux prêt (Natif).";
-                video.play();
-            });
-        } else {
-            statusMessage.textContent = "Votre navigateur ne supporte pas la lecture de ce format.";
-            statusMessage.style.color = "#ff4444";
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(database, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "data.json");
+            dlAnchorElem.click();
         }
     </script>
-
 </body>
 </html>
